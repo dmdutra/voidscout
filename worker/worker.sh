@@ -29,6 +29,7 @@ Environment:
 Commands:
   scan                     Scan templates and update package metadata
   check [--limit N]        Check upstream versions for supported packages
+                           (GitHub, GitLab, Codeberg, GNU, Non-GNU, FTP/HTTP)
   help                     Show this help
 EOF
 }
@@ -137,7 +138,7 @@ scan_repo() {
 
 			upstream_type=""
 			upstream_id=""
-			if upstream="$(detect_upstream "${homepage}" "${distfile}")"; then
+			if upstream="$(detect_upstream "${homepage}" "${distfile}" "${version}")"; then
 				IFS=$'\t' read -r upstream_type upstream_id <<<"${upstream}"
 			fi
 

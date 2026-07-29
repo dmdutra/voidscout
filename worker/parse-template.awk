@@ -51,6 +51,8 @@ function sanitize_field(s) {
 }
 
 BEGIN {
+	vars["GNU_SITE"] = "https://ftp.gnu.org/gnu"
+	vars["NONGNU_SITE"] = "https://download.savannah.nongnu.org/releases"
 	pkgname = ""
 	version = ""
 	short_desc = ""
