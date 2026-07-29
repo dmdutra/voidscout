@@ -1,5 +1,5 @@
 # Parse Void Linux srcpkgs template files.
-# Outputs: pkgname<TAB>version<TAB>short_desc<TAB>template_path
+# Outputs: pkgname<TAB>version<TAB>short_desc<TAB>template_path<TAB>homepage<TAB>distfile
 
 function trim(s) {
 	sub(/^[ \t]+/, "", s)
@@ -54,6 +54,8 @@ BEGIN {
 	pkgname = ""
 	version = ""
 	short_desc = ""
+	homepage = ""
+	distfile = ""
 }
 
 /^[ \t]*#/ || /^[ \t]*$/ {
@@ -70,7 +72,12 @@ BEGIN {
 		version = val
 	else if (key == "short_desc")
 		short_desc = val
-	else if (key ~ /^[a-zA-Z_][a-zA-Z0-9_]*$/)
+	else if (key == "homepage")
+		homepage = val
+	else if (key == "distfiles" && distfile == "")
+		distfile = val
+
+	if (key ~ /^[a-zA-Z_][a-zA-Z0-9_]*$/)
 		vars[key] = val
 }
 
@@ -79,9 +86,13 @@ END {
 		exit 1
 
 	version = resolve(version)
+	homepage = resolve(homepage)
+	distfile = resolve(distfile)
 
 	print sanitize_field(pkgname) "\t" \
 		sanitize_field(version) "\t" \
 		sanitize_field(short_desc) "\t" \
-		sanitize_field(template_path)
+		sanitize_field(template_path) "\t" \
+		sanitize_field(homepage) "\t" \
+		sanitize_field(distfile)
 }
