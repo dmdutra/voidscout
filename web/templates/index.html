@@ -3,139 +3,213 @@
 {% block title %}voidscout — Void Linux package tracker{% endblock %}
 
 {% block content %}
-<section class="mb-4">
-	<div class="row g-3 align-items-end">
-		<div class="col-lg-8">
-			<h1 class="h3 mb-1">Package index</h1>
-			<p class="text-secondary mb-0">
+<section class="dashboard-hero" aria-labelledby="page-title">
+	<div class="dashboard-hero__content">
+		<div class="dashboard-hero__intro">
+			<p class="dashboard-eyebrow">Void Linux</p>
+			<h1 class="dashboard-title" id="page-title">Package index</h1>
+			<p class="dashboard-subtitle">
 				Track versions from the Void Linux srcpkgs tree and upstream updates.
 			</p>
 		</div>
-		<div class="col-lg-4">
-			<div class="d-flex gap-3 justify-content-lg-end">
-				<div class="stat-pill">
-					<span class="stat-label">Packages</span>
-					<strong>{{ stats.total }}</strong>
+
+		<div class="metric-grid" role="group" aria-label="System metrics">
+			<article class="metric-card">
+				<div class="metric-card__header">
+					<span class="metric-card__icon" aria-hidden="true">
+						<i class="bi bi-box-seam"></i>
+					</span>
+					<span class="metric-card__label">Packages</span>
 				</div>
-				<div class="stat-pill stat-pill-accent">
-					<span class="stat-label">Updates</span>
-					<strong>{{ stats.updates }}</strong>
+				<strong class="metric-card__value">{{ stats.total }}</strong>
+			</article>
+			<article class="metric-card metric-card--accent">
+				<div class="metric-card__header">
+					<span class="metric-card__icon" aria-hidden="true">
+						<i class="bi bi-arrow-up-circle"></i>
+					</span>
+					<span class="metric-card__label">Updates</span>
 				</div>
-			</div>
+				<strong class="metric-card__value">{{ stats.updates }}</strong>
+			</article>
 		</div>
 	</div>
 </section>
 
 {% if db_error %}
 <div class="alert alert-warning" role="alert">
-	<i class="bi bi-exclamation-triangle me-2"></i>{{ db_error }}
+	<i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>{{ db_error }}
 </div>
 {% else %}
-<form class="row g-2 mb-4" method="get" action="{{ url_for('index') }}">
-	<div class="col-md-8 col-lg-6">
-		<label class="visually-hidden" for="search">Search packages</label>
-		<div class="input-group">
-			<span class="input-group-text"><i class="bi bi-search"></i></span>
+<section class="search-panel" aria-label="Search and filters">
+	<form class="search-form" method="get" action="{{ url_for('index') }}">
+		<div class="search-field">
+			<label class="visually-hidden" for="search">Search packages</label>
+			<i class="bi bi-search search-field__icon" aria-hidden="true"></i>
 			<input type="search"
 				class="form-control void-input"
 				id="search"
 				name="q"
 				value="{{ query }}"
-				placeholder="Search by name, description or version">
+				placeholder="Search by name, description or version"
+				autocomplete="off">
 		</div>
-	</div>
-	<div class="col-auto">
-		<button type="submit" class="btn btn-void">Search</button>
-		{% if query %}
-		<a href="{{ url_for('index') }}" class="btn btn-outline-void">Clear</a>
-		{% endif %}
-	</div>
-</form>
+		<div class="search-actions">
+			<button type="submit" class="btn btn-void">Search</button>
+			{% if query %}
+			<a href="{{ url_for('index') }}" class="btn btn-outline-void">Clear</a>
+			{% endif %}
+		</div>
+	</form>
 
-<div class="table-responsive void-table-wrap">
-	<table class="table table-hover align-middle void-table mb-0">
-		<thead>
-			<tr>
-				<th scope="col">Package</th>
-				<th scope="col">Description</th>
-				<th scope="col">Version</th>
-				<th scope="col">New version</th>
-				<th scope="col">Upstream</th>
-				<th scope="col">Checked</th>
-				<th scope="col" class="text-end">Distfile</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for pkg in packages %}
-			<tr class="{% if pkg.new_version and pkg.new_version != pkg.version %}row-update{% endif %}">
-				<td class="fw-semibold text-nowrap">
-					{% if pkg.homepage %}
-					<a href="{{ pkg.homepage }}" class="pkg-link" target="_blank" rel="noopener noreferrer">
+	<div class="filter-bar" role="toolbar" aria-label="Quick filters">
+		<span class="filter-bar__label">Filter</span>
+		<button type="button" class="filter-chip" data-filter="all" aria-pressed="true">
+			All
+		</button>
+		<button type="button" class="filter-chip" data-filter="updated" aria-pressed="false">
+			<i class="bi bi-arrow-up-circle filter-chip__icon" aria-hidden="true"></i>
+			Updated
+		</button>
+		<button type="button" class="filter-chip" data-filter="github" aria-pressed="false">
+			<i class="bi bi-github filter-chip__icon" aria-hidden="true"></i>
+			GitHub
+		</button>
+		<button type="button" class="filter-chip" data-filter="ftp" aria-pressed="false">
+			<i class="bi bi-hdd-network filter-chip__icon" aria-hidden="true"></i>
+			FTP
+		</button>
+		<button type="button" class="filter-chip" data-filter="dirlist" aria-pressed="false">
+			<i class="bi bi-folder2-open filter-chip__icon" aria-hidden="true"></i>
+			Dirlist
+		</button>
+		<button type="button" class="filter-chip" data-filter="distfile" aria-pressed="false">
+			<i class="bi bi-download filter-chip__icon" aria-hidden="true"></i>
+			Has Distfile
+		</button>
+		<span class="filter-status" id="filter-status" aria-live="polite"></span>
+	</div>
+</section>
+
+<section class="table-panel" aria-label="Package list">
+	<div class="void-table-wrap">
+		<table class="table void-table mb-0">
+			<thead>
+				<tr>
+					<th scope="col">Package</th>
+					<th scope="col">Description</th>
+					<th scope="col">Version</th>
+					<th scope="col">New version</th>
+					<th scope="col">Upstream</th>
+					<th scope="col">Checked</th>
+					<th scope="col" class="text-end">Distfile</th>
+				</tr>
+			</thead>
+			<tbody id="package-rows">
+				{% for pkg in packages %}
+				{% set has_update = pkg.new_version and pkg.new_version != pkg.version %}
+				{% set upstream = (pkg.upstream_type or '') | lower %}
+				<tr class="{% if has_update %}row-update{% endif %}"
+					data-pkg-row
+					data-updated="{{ 'true' if has_update else 'false' }}"
+					data-upstream="{{ upstream }}"
+					data-distfile="{{ 'true' if pkg.download_url else 'false' }}">
+					<td class="col-package text-nowrap">
+						{% if pkg.homepage %}
+						<a href="{{ pkg.homepage }}" class="pkg-link" target="_blank" rel="noopener noreferrer">
+							{{ pkg.pkgname }}
+						</a>
+						{% else %}
 						{{ pkg.pkgname }}
-					</a>
-					{% else %}
-					{{ pkg.pkgname }}
-					{% endif %}
-				</td>
-				<td class="description-cell">{{ pkg.description }}</td>
-				<td class="text-nowrap"><code>{{ pkg.version }}</code></td>
-				<td class="text-nowrap">
-					{% if pkg.new_version and pkg.new_version != pkg.version %}
-					<span class="badge badge-update">{{ pkg.new_version }}</span>
-					{% else %}
-					<span class="text-secondary">—</span>
-					{% endif %}
-				</td>
-				<td class="text-nowrap">
-					{% if pkg.upstream_type %}
-					<span class="badge badge-upstream">{{ pkg.upstream_type }}</span>
-					{% else %}
-					<span class="text-secondary">—</span>
-					{% endif %}
-				</td>
-				<td class="text-nowrap text-secondary small">
-					{{ pkg.checked_at or pkg.scanned_at or "—" }}
-				</td>
-				<td class="text-end text-nowrap">
-					{% if pkg.download_url %}
-					<a href="{{ pkg.download_url }}"
-						class="btn btn-sm btn-void"
-						target="_blank"
-						rel="noopener noreferrer"
-						title="Download distfile">
-						<i class="bi bi-download me-1"></i>Download
-					</a>
-					{% else %}
-					<span class="text-secondary">—</span>
-					{% endif %}
-				</td>
-			</tr>
-			{% else %}
-			<tr>
-				<td colspan="7" class="text-center text-secondary py-5">
-					No packages found{% if query %} for “{{ query }}”{% endif %}.
-				</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
-</div>
+						{% endif %}
+					</td>
+					<td class="col-description">{{ pkg.description }}</td>
+					<td class="col-version text-nowrap">
+						<code>{{ pkg.version }}</code>
+					</td>
+					<td class="text-nowrap">
+						{% if has_update %}
+						<span class="badge-update">{{ pkg.new_version }}</span>
+						{% else %}
+						<span class="col-meta">—</span>
+						{% endif %}
+					</td>
+					<td class="text-nowrap">
+						{% if pkg.upstream_type %}
+						{% set upstream_icon = {
+							'github': 'bi-github',
+							'gitlab': 'bi-gitlab',
+							'codeberg': 'bi-git',
+							'ftp': 'bi-hdd-network',
+							'dirlist': 'bi-folder2-open',
+							'gnu': 'bi-box-seam',
+							'nongnu': 'bi-box-seam',
+							'sourceforge': 'bi-cloud-arrow-down',
+							'kernel': 'bi-cpu'
+						}.get(upstream, 'bi-link-45deg') %}
+						<span class="upstream-badge upstream-badge--{{ upstream }}">
+							<i class="bi {{ upstream_icon }}" aria-hidden="true"></i>
+							{{ pkg.upstream_type }}
+						</span>
+						{% else %}
+						<span class="col-meta">—</span>
+						{% endif %}
+					</td>
+					<td class="text-nowrap col-meta">
+						{{ pkg.checked_at or pkg.scanned_at or "—" }}
+					</td>
+					<td class="text-end text-nowrap">
+						{% if pkg.download_url %}
+						<a href="{{ pkg.download_url }}"
+							class="btn-download"
+							target="_blank"
+							rel="noopener noreferrer"
+							title="Download distfile"
+							aria-label="Download distfile for {{ pkg.pkgname }}">
+							<i class="bi bi-download" aria-hidden="true"></i>
+							<span>Download</span>
+						</a>
+						{% else %}
+						<span class="col-meta">—</span>
+						{% endif %}
+					</td>
+				</tr>
+				{% else %}
+				<tr id="server-empty-row">
+					<td colspan="7" class="table-empty">
+						<i class="bi bi-inbox" aria-hidden="true"></i>
+						No packages found{% if query %} for “{{ query }}”{% endif %}.
+					</td>
+				</tr>
+				{% endfor %}
+				<tr id="filter-empty-row" hidden>
+					<td colspan="7" class="table-empty">
+						<i class="bi bi-funnel" aria-hidden="true"></i>
+						No packages match the selected filter on this page.
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</section>
 
 {% if total_pages > 1 %}
-<nav class="d-flex justify-content-between align-items-center mt-4" aria-label="Package pagination">
-	<span class="text-secondary small">
+<nav class="pagination-bar" aria-label="Package pagination">
+	<span class="pagination-bar__info">
 		Page {{ page }} of {{ total_pages }} · {{ total }} packages
 	</span>
 	<ul class="pagination pagination-sm mb-0">
 		<li class="page-item {% if page <= 1 %}disabled{% endif %}">
 			<a class="page-link"
-				href="{{ url_for('index', page=page-1, q=query) if page > 1 else '#' }}">
+				href="{{ url_for('index', page=page-1, q=query) if page > 1 else '#' }}"
+				{% if page <= 1 %}aria-disabled="true" tabindex="-1"{% endif %}>
 				Previous
 			</a>
 		</li>
 		<li class="page-item {% if page >= total_pages %}disabled{% endif %}">
 			<a class="page-link"
-				href="{{ url_for('index', page=page+1, q=query) if page < total_pages else '#' }}">
+				href="{{ url_for('index', page=page+1, q=query) if page < total_pages else '#' }}"
+				{% if page >= total_pages %}aria-disabled="true" tabindex="-1"{% endif %}>
 				Next
 			</a>
 		</li>
@@ -143,4 +217,8 @@
 </nav>
 {% endif %}
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/voidscout.js') }}"></script>
 {% endblock %}
