@@ -19,7 +19,7 @@ Clone void-packages next to voidscout (or point `VOIDSCOUT_REPO` to your checkou
 ```text
 OpenSource/
 ├── voidscout/
-└── v/                 # void-packages checkout
+└── void-packages/
 ```
 
 ### 1. Index packages
@@ -65,7 +65,7 @@ VOIDSCOUT_DB=../data/voidscout.db python3 app.py
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VOIDSCOUT_REPO` | Path to void-packages checkout | `../v` |
+| `VOIDSCOUT_REPO` | Path to void-packages checkout | `./void-packages` |
 | `VOIDSCOUT_DB` | SQLite database path | `data/voidscout.db` |
 | `VOIDSCOUT_GITHUB_TOKEN` | GitHub token for higher API rate limits | — |
 | `VOIDSCOUT_CHECK_SLEEP` | Delay between upstream HTTP requests (seconds) | `0.1` |
