@@ -10,7 +10,7 @@ source "${SCRIPT_DIR}/lib/version-compare.sh"
 # shellcheck source=lib/upstream.sh
 source "${SCRIPT_DIR}/lib/upstream.sh"
 
-REPO_DIR="${VOIDSCOUT_REPO:-${PROJECT_DIR}/../v}"
+REPO_DIR="${VOIDSCOUT_REPO:-${PROJECT_DIR}/./void-packages}"
 DB_PATH="${VOIDSCOUT_DB:-${PROJECT_DIR}/data/voidscout.db}"
 CHECK_SLEEP="${VOIDSCOUT_CHECK_SLEEP:-0.1}"
 
@@ -21,7 +21,7 @@ Usage: $(basename "$0") <command> [options]
 Voidscout worker for Void Linux srcpkgs.
 
 Environment:
-  VOIDSCOUT_REPO           Path to void-packages checkout (default: ../v)
+  VOIDSCOUT_REPO           Path to void-packages checkout (default: ./void-packages)
   VOIDSCOUT_DB             SQLite database path (default: data/voidscout.db)
   VOIDSCOUT_GITHUB_TOKEN   GitHub token for higher API rate limits
   VOIDSCOUT_CHECK_SLEEP    Delay between upstream HTTP requests (default: 0.1)
