@@ -2,12 +2,16 @@
 
 # shellcheck source=dirlist.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/dirlist.sh"
+# shellcheck source=kernel.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/kernel.sh"
+# shellcheck source=sourceforge.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/sourceforge.sh"
 
 detect_upstream() {
 	local homepage="${1:-}"
 	local distfile="${2:-}"
 	local version="${3:-}"
-	local url repo dirlist_id list_url upstream_type
+	local url repo upstream_id list_url upstream_type
 
 	for url in "${distfile}" "${homepage}"; do
 		[[ -z "${url}" ]] && continue
@@ -28,10 +32,20 @@ detect_upstream() {
 		fi
 	done
 
-	if dirlist_id="$(extract_dirlist_upstream "${distfile}" "${version}")"; then
-		list_url="${dirlist_id%%"${DIRLIST_SEP}"*}"
+	if upstream_id="$(extract_sourceforge_upstream "${distfile}" "${version}")"; then
+		printf 'sourceforge\t%s' "${upstream_id}"
+		return 0
+	fi
+
+	if upstream_id="$(extract_kernel_upstream "${distfile}" "${version}")"; then
+		printf 'kernel\t%s' "${upstream_id}"
+		return 0
+	fi
+
+	if upstream_id="$(extract_dirlist_upstream "${distfile}" "${version}")"; then
+		list_url="${upstream_id%%"${DIRLIST_SEP}"*}"
 		upstream_type="$(classify_dirlist_type "${list_url}")"
-		printf '%s\t%s' "${upstream_type}" "${dirlist_id}"
+		printf '%s\t%s' "${upstream_type}" "${upstream_id}"
 		return 0
 	fi
 
@@ -105,8 +119,11 @@ fetch_latest_version() {
 	codeberg)
 		fetch_codeberg_latest "${upstream_id}"
 		;;
-	gnu | nongnu | ftp | dirlist)
+	gnu | nongnu | ftp | dirlist | kernel)
 		fetch_dirlist_latest "${upstream_id}"
+		;;
+	sourceforge)
+		fetch_sourceforge_latest "${upstream_id}"
 		;;
 	*)
 		return 1

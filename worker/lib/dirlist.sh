@@ -26,6 +26,12 @@ classify_dirlist_type() {
 	*download.savannah.nongnu.org/releases/*)
 		printf 'nongnu'
 		;;
+	*kernel.org/pub/linux/*)
+		printf 'kernel'
+		;;
+	*downloads.sourceforge.net/*)
+		printf 'sourceforge'
+		;;
 	ftp://*)
 		printf 'ftp'
 		;;
@@ -86,6 +92,7 @@ extract_versions_from_listing() {
 	local listing="$1"
 	local prefix="$2"
 	local suffix="$3"
+	local series_filter="${4:-}"
 	local candidate file version
 
 	while IFS= read -r candidate; do
@@ -103,6 +110,7 @@ extract_versions_from_listing() {
 		version="${version%"${suffix}"}"
 		[[ -n "${version}" ]] || continue
 		is_plausible_version "${version}" || continue
+		matches_series_filter "${version}" "${series_filter}" || continue
 
 		printf '%s\n' "${version}"
 	done < <(listing_candidates "${listing}" | sort -u)
@@ -110,9 +118,9 @@ extract_versions_from_listing() {
 
 fetch_dirlist_latest() {
 	local upstream_id="$1"
-	local list_url prefix suffix listing latest
+	local list_url prefix suffix series_filter listing latest
 
-	IFS="${DIRLIST_SEP}" read -r list_url prefix suffix <<<"${upstream_id}"
+	IFS="${DIRLIST_SEP}" read -r list_url prefix suffix series_filter <<<"${upstream_id}"
 
 	[[ -n "${list_url}" && -n "${prefix}" && -n "${suffix}" ]] || return 1
 
@@ -120,7 +128,7 @@ fetch_dirlist_latest() {
 		return 1
 	fi
 
-	latest="$(extract_versions_from_listing "${listing}" "${prefix}" "${suffix}" | version_sort_latest || true)"
+	latest="$(extract_versions_from_listing "${listing}" "${prefix}" "${suffix}" "${series_filter}" | version_sort_latest || true)"
 	[[ -n "${latest}" ]] || return 1
 
 	normalize_version "${latest}"

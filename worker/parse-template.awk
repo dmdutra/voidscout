@@ -29,8 +29,36 @@ function parse_key(line, eq) {
 	return substr(line, 1, eq - 1)
 }
 
-function resolve(str, key, val, result) {
+function version_major(    parts) {
+	split(vars["version"], parts, ".")
+	return parts[1]
+}
+
+function version_major_minor(    parts, n) {
+	n = split(vars["version"], parts, ".")
+	if (n >= 2)
+		return parts[1] "." parts[2]
+	return vars["version"]
+}
+
+function version_patch(    parts, n) {
+	n = split(vars["version"], parts, ".")
+	return parts[n]
+}
+
+function resolve_bash_version_expansions(str,    result) {
 	result = str
+	while (match(result, /\$\{version%%\.\*\}/))
+		result = substr(result, 1, RSTART - 1) version_major() substr(result, RSTART + RLENGTH)
+	while (match(result, /\$\{version%\.\*\}/))
+		result = substr(result, 1, RSTART - 1) version_major_minor() substr(result, RSTART + RLENGTH)
+	while (match(result, /\$\{version##\*\.\}/))
+		result = substr(result, 1, RSTART - 1) version_patch() substr(result, RSTART + RLENGTH)
+	return result
+}
+
+function resolve(str, key, val, result) {
+	result = resolve_bash_version_expansions(str)
 	while (match(result, /\$\{[_a-zA-Z0-9]+\}/)) {
 		key = substr(result, RSTART + 2, RLENGTH - 3)
 		val = (key in vars) ? vars[key] : ""
@@ -53,6 +81,8 @@ function sanitize_field(s) {
 BEGIN {
 	vars["GNU_SITE"] = "https://ftp.gnu.org/gnu"
 	vars["NONGNU_SITE"] = "https://download.savannah.nongnu.org/releases"
+	vars["KERNEL_SITE"] = "https://www.kernel.org/pub/linux"
+	vars["SOURCEFORGE_SITE"] = "https://downloads.sourceforge.net/sourceforge"
 	pkgname = ""
 	version = ""
 	short_desc = ""

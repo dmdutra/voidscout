@@ -29,7 +29,8 @@ Environment:
 Commands:
   scan                     Scan templates and update package metadata
   check [--limit N]        Check upstream versions for supported packages
-                           (GitHub, GitLab, Codeberg, GNU, Non-GNU, FTP/HTTP)
+                           (GitHub, GitLab, Codeberg, GNU, Non-GNU, Kernel,
+                            SourceForge, FTP/HTTP)
   help                     Show this help
 EOF
 }
