@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}voidscout — Void Linux package tracker{% endblock %}
+
+{% block content %}
+<section class="mb-4">
+	<div class="row g-3 align-items-end">
+		<div class="col-lg-8">
+			<h1 class="h3 mb-1">Package index</h1>
+			<p class="text-secondary mb-0">
+				Track versions from the Void Linux srcpkgs tree and upstream updates.
+			</p>
+		</div>
+		<div class="col-lg-4">
+			<div class="d-flex gap-3 justify-content-lg-end">
+				<div class="stat-pill">
+					<span class="stat-label">Packages</span>
+					<strong>{{ stats.total }}</strong>
+				</div>
+				<div class="stat-pill stat-pill-accent">
+					<span class="stat-label">Updates</span>
+					<strong>{{ stats.updates }}</strong>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+{% if db_error %}
+<div class="alert alert-warning" role="alert">
+	<i class="bi bi-exclamation-triangle me-2"></i>{{ db_error }}
+</div>
+{% else %}
+<form class="row g-2 mb-4" method="get" action="{{ url_for('index') }}">
+	<div class="col-md-8 col-lg-6">
+		<label class="visually-hidden" for="search">Search packages</label>
+		<div class="input-group">
+			<span class="input-group-text"><i class="bi bi-search"></i></span>
+			<input type="search"
+				class="form-control void-input"
+				id="search"
+				name="q"
+				value="{{ query }}"
+				placeholder="Search by name, description or version">
+		</div>
+	</div>
+	<div class="col-auto">
+		<button type="submit" class="btn btn-void">Search</button>
+		{% if query %}
+		<a href="{{ url_for('index') }}" class="btn btn-outline-void">Clear</a>
+		{% endif %}
+	</div>
+</form>
+
+<div class="table-responsive void-table-wrap">
+	<table class="table table-hover align-middle void-table mb-0">
+		<thead>
+			<tr>
+				<th scope="col">Package</th>
+				<th scope="col">Description</th>
+				<th scope="col">Version</th>
+				<th scope="col">New version</th>
+				<th scope="col">Upstream</th>
+				<th scope="col">Checked</th>
+				<th scope="col" class="text-end">Distfile</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for pkg in packages %}
+			<tr class="{% if pkg.new_version and pkg.new_version != pkg.version %}row-update{% endif %}">
+				<td class="fw-semibold text-nowrap">
+					{% if pkg.homepage %}
+					<a href="{{ pkg.homepage }}" class="pkg-link" target="_blank" rel="noopener noreferrer">
+						{{ pkg.pkgname }}
+					</a>
+					{% else %}
+					{{ pkg.pkgname }}
+					{% endif %}
+				</td>
+				<td class="description-cell">{{ pkg.description }}</td>
+				<td class="text-nowrap"><code>{{ pkg.version }}</code></td>
+				<td class="text-nowrap">
+					{% if pkg.new_version and pkg.new_version != pkg.version %}
+					<span class="badge badge-update">{{ pkg.new_version }}</span>
+					{% else %}
+					<span class="text-secondary">—</span>
+					{% endif %}
+				</td>
+				<td class="text-nowrap">
+					{% if pkg.upstream_type %}
+					<span class="badge badge-upstream">{{ pkg.upstream_type }}</span>
+					{% else %}
+					<span class="text-secondary">—</span>
+					{% endif %}
+				</td>
+				<td class="text-nowrap text-secondary small">
+					{{ pkg.checked_at or pkg.scanned_at or "—" }}
+				</td>
+				<td class="text-end text-nowrap">
+					{% if pkg.download_url %}
+					<a href="{{ pkg.download_url }}"
+						class="btn btn-sm btn-void"
+						target="_blank"
+						rel="noopener noreferrer"
+						title="Download distfile">
+						<i class="bi bi-download me-1"></i>Download
+					</a>
+					{% else %}
+					<span class="text-secondary">—</span>
+					{% endif %}
+				</td>
+			</tr>
+			{% else %}
+			<tr>
+				<td colspan="7" class="text-center text-secondary py-5">
+					No packages found{% if query %} for “{{ query }}”{% endif %}.
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+
+{% if total_pages > 1 %}
+<nav class="d-flex justify-content-between align-items-center mt-4" aria-label="Package pagination">
+	<span class="text-secondary small">
+		Page {{ page }} of {{ total_pages }} · {{ total }} packages
+	</span>
+	<ul class="pagination pagination-sm mb-0">
+		<li class="page-item {% if page <= 1 %}disabled{% endif %}">
+			<a class="page-link"
+				href="{{ url_for('index', page=page-1, q=query) if page > 1 else '#' }}">
+				Previous
+			</a>
+		</li>
+		<li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+			<a class="page-link"
+				href="{{ url_for('index', page=page+1, q=query) if page < total_pages else '#' }}">
+				Next
+			</a>
+		</li>
+	</ul>
+</nav>
+{% endif %}
+{% endif %}
+{% endblock %}
